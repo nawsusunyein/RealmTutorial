@@ -19,8 +19,8 @@ class CommicBookStore{
         }
     }
     
-    public func getCommicBooks() -> Results<ComicBook>{
-        return realm.objects(ComicBook.self)
+    public func getCommicBooks() -> [ComicBook]{
+        return Array(realm.objects(ComicBook.self))
     }
     
     public func findComicByTitle(_ title : String) -> Results<ComicBook>{

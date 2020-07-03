@@ -10,29 +10,37 @@ import UIKit
 
 class ViewController: UIViewController {
 
-    private var commicBookStore = CommicBookStore()
+    @IBOutlet weak var comicTableView : UITableView!
+    
+    private var commicListVM : CommicListViewModel!
+    private var commicBookListVM : CommicListViewModel!
+    
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        // Do any additional setup after loading the view.
-        
         let add = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(addComic))
         navigationItem.rightBarButtonItem = add
-        let commic1 = commicBookStore.makeNewComicBook("Comic 1", character: "Comic Char 1", issue: 10)
-        let commic2 = commicBookStore.makeNewComicBook("Comic 2", character: "Comic Char 2", issue: 20)
-        let commic3 = commicBookStore.makeNewComicBook("Comic 3", character: "Comic Char 3", issue: 13)
-        let commic4 = commicBookStore.makeNewComicBook("Comic 4", character: "Comic Char 4", issue: 23)
-        commicBookStore.saveCommicBook(commic1)
-        commicBookStore.saveCommicBook(commic2)
-        commicBookStore.saveCommicBook(commic3)
-        commicBookStore.saveCommicBook(commic4)
         
-        let commics = commicBookStore.getCommicBooks()
+        self.comicTableView.register(UINib(nibName: "ComicBookTableViewCell", bundle: nil), forCellReuseIdentifier: "ComicBookTableViewCell")
+        
         
     }
 
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        let commicBookStore = CommicBookStore()
+        self.commicBookListVM = CommicListViewModel(commicBookStore)
+        let commicBookList = self.commicBookListVM.getCommicBookList()
+        
+        if let commicBookList = commicBookList{
+            self.commicListVM = CommicListViewModel(commicBookList)
+            DispatchQueue.main.async {
+                self.comicTableView.reloadData()
+            }
+        }
+    }
+    
     @objc func addComic(){
-        print("here tap")
         let newComicStoryBoard = UIStoryboard.init(name: "NewComic", bundle: nil)
         let newComicViewController = newComicStoryBoard.instantiateViewController(identifier: "NewCommicViewController") as! NewComicViewController
         
@@ -42,3 +50,24 @@ class ViewController: UIViewController {
 
 }
 
+extension ViewController : UITableViewDataSource,UITableViewDelegate{
+    
+    func numberOfSections(in tableView: UITableView) -> Int {
+        return self.commicListVM.numberOfSection
+    }
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return self.commicListVM.numberOfRowsInSection(section)
+    }
+    
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCell(withIdentifier: "ComicBookTableViewCell", for: indexPath) as! ComicBookTableViewCell
+        let comicBook = self.commicListVM.commicAtIndex(indexPath.row)
+        cell.lblComicTitle.text = comicBook.title
+        cell.lblComicDescription.text = comicBook.description
+        cell.lblComicIssue.text = comicBook.issue
+        return cell
+    }
+    
+    
+    
+}
